@@ -126,20 +126,19 @@ exports.updateProfile = async (req, res) => {
 // @access Public
 exports.memberLogin = async (req, res) => {
   try {
-    const { memberNumber, pin, organizationId } = req.body;
-    if (!memberNumber || !pin) {
-      return res.status(400).json({ success: false, message: 'Please provide member number and PIN' });
+    const { phone, pin } = req.body;
+    if (!phone || !pin) {
+      return res.status(400).json({ success: false, message: 'Please provide phone number and PIN' });
     }
 
     const Member = require('../models/Member');
     const member = await Member.findOne({
-      memberNumber: memberNumber.toUpperCase().trim(),
-      organization: organizationId,
+      phone: phone.trim(),
       status: 'active',
     }).populate('organization', 'name type currency');
 
     if (!member) {
-      return res.status(401).json({ success: false, message: 'Member not found or inactive' });
+      return res.status(401).json({ success: false, message: 'Phone number not found or account inactive' });
     }
 
     if (member.pin !== pin) {
