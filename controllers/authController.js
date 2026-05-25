@@ -3,14 +3,13 @@ const Organization = require('../models/Organization');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
-// Generate JWT token
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE,
   });
 };
 
-// @route  POST /api/auth/register
+// @route POST /api/auth/register
 exports.register = async (req, res) => {
   try {
     const { orgName, orgType, adminName, email, password, phone } = req.body;
@@ -21,8 +20,10 @@ exports.register = async (req, res) => {
     }
 
     const organization = await Organization.create({
-      name: orgName, type: orgType || 'chama',
-      phone, email,
+      name: orgName,
+      type: orgType || 'chama',
+      phone,
+      email,
     });
 
     const salt = await bcrypt.genSalt(10);
@@ -30,9 +31,11 @@ exports.register = async (req, res) => {
 
     const user = await User.create({
       organization: organization._id,
-      name: adminName, email,
+      name: adminName,
+      email,
       password: hashedPassword,
-      phone, role: 'admin',
+      phone,
+      role: 'admin',
     });
 
     const token = generateToken(user._id);
@@ -42,9 +45,17 @@ exports.register = async (req, res) => {
       message: 'Organization registered successfully',
       token,
       user: {
-        id: user._id, name: user.name,
-        email: user.email, role: user.role,
-        organization: { id: organization._id, name: organization.name, type: organization.type },
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone,
+        organization: {
+          id: organization._id,
+          name: organization.name,
+          type: organization.type,
+          currency: 'KES',
+        },
       },
     });
   } catch (error) {
@@ -53,7 +64,7 @@ exports.register = async (req, res) => {
   }
 };
 
-// @route  POST /api/auth/login
+// @route POST /api/auth/login
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -77,7 +88,6 @@ exports.login = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Account deactivated. Contact your admin.' });
     }
 
-    // Update last login without triggering pre-save hook
     await User.findByIdAndUpdate(user._id, { lastLogin: Date.now() });
 
     const token = generateToken(user._id);
@@ -86,9 +96,12 @@ exports.login = async (req, res) => {
       success: true,
       token,
       user: {
-        id: user._id, name: user.name,
-        email: user.email, role: user.role,
-        phone: user.phone, avatar: user.avatar,
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone,
+        avatar: user.avatar,
         organization: user.organization,
       },
     });
@@ -98,7 +111,7 @@ exports.login = async (req, res) => {
   }
 };
 
-// @route  GET /api/auth/me
+// @route GET /api/auth/me
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id)
@@ -109,21 +122,22 @@ exports.getMe = async (req, res) => {
   }
 };
 
-// @route  PUT /api/auth/updateprofile
+// @route PUT /api/auth/updateprofile
 exports.updateProfile = async (req, res) => {
   try {
     const { name, phone } = req.body;
     const user = await User.findByIdAndUpdate(
-      req.user.id, { name, phone }, { new: true, runValidators: true }
+      req.user.id,
+      { name, phone },
+      { new: true, runValidators: true }
     ).populate('organization', 'name type');
     res.json({ success: true, user });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-// @route  POST /api/auth/member-login
-// @desc   Member login with member number + PIN
-// @access Public
+
+// @route POST /api/auth/member-login
 exports.memberLogin = async (req, res) => {
   try {
     const { phone, pin } = req.body;
