@@ -21,6 +21,7 @@ app.use('/api/members', require('./routes/members'));
 app.use('/api/contributions', require('./routes/contributions'));
 app.use('/api/loans', require('./routes/loans'));
 app.use('/api/reports', require('./routes/reports'));
+app.use('/api/notifications', require('./routes/notifications'));
 
 app.get('/', (req, res) => {
   res.json({ success: true, message: '🌱 AkibaNest API is running', version: '1.0.0' });
