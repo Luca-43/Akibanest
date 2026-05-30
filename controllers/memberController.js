@@ -90,3 +90,49 @@ exports.getMemberStats = async (req, res, next) => {
     res.json({ success: true, stats: { total, active, inactive } });
   } catch (error) { next(error); }
 };
+
+// @route PUT /api/members/:id/change-pin
+// @access Private
+exports.changePIN = async (req, res) => {
+  try {
+    const { currentPin, newPin } = req.body;
+    if (!currentPin || !newPin) {
+      return res.status(400).json({ success: false, message: 'Please provide current and new PIN' });
+    }
+    if (newPin.length !== 4 || isNaN(newPin)) {
+      return res.status(400).json({ success: false, message: 'PIN must be exactly 4 digits' });
+    }
+    const member = await Member.findOne({
+      _id: req.params.id,
+      organization: req.user.organization._id,
+    });
+    if (!member) {
+      return res.status(404).json({ success: false, message: 'Member not found' });
+    }
+    if (member.pin !== currentPin) {
+      return res.status(401).json({ success: false, message: 'Current PIN is incorrect' });
+    }
+    member.pin = newPin;
+    await member.save();
+    res.json({ success: true, message: 'PIN changed successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @route PUT /api/members/:id/profile
+// @access Private
+exports.updateMemberProfile = async (req, res) => {
+  try {
+    const { name, email, nextOfKin } = req.body;
+    const member = await Member.findOneAndUpdate(
+      { _id: req.params.id, organization: req.user.organization._id },
+      { name, email, nextOfKin },
+      { new: true }
+    );
+    if (!member) return res.status(404).json({ success: false, message: 'Member not found' });
+    res.json({ success: true, message: 'Profile updated', member });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
