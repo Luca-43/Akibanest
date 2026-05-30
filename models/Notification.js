@@ -6,8 +6,7 @@ const NotificationSchema = new mongoose.Schema({
   recipientType: { type: String, enum: ['user', 'member'], default: 'user' },
   type: {
     type: String,
-    enum: ['contribution', 'loan_applied', 'loan_approved', 'loan_rejected',
-           'loan_repayment', 'meeting', 'announcement', 'general'],
+    enum: ['contribution', 'loan_applied', 'loan_approved', 'loan_rejected', 'loan_repayment', 'meeting', 'announcement', 'general'],
     default: 'general',
   },
   title: { type: String, required: true },

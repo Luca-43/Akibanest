@@ -1,6 +1,5 @@
 const Notification = require('../models/Notification');
 
-// Helper to create a notification (used by other controllers)
 exports.createNotification = async ({ organization, recipient, recipientType, type, title, message, data }) => {
   try {
     await Notification.create({ organization, recipient, recipientType, type, title, message, data });
@@ -9,14 +8,12 @@ exports.createNotification = async ({ organization, recipient, recipientType, ty
   }
 };
 
-// GET /api/notifications — get my notifications
 exports.getNotifications = async (req, res) => {
   try {
     const notifications = await Notification.find({
       organization: req.user.organization._id,
       recipient: req.user._id,
     }).sort({ createdAt: -1 }).limit(50);
-
     const unreadCount = notifications.filter(n => !n.isRead).length;
     res.json({ success: true, unreadCount, notifications });
   } catch (error) {
@@ -24,7 +21,6 @@ exports.getNotifications = async (req, res) => {
   }
 };
 
-// PUT /api/notifications/read-all — mark all as read
 exports.markAllRead = async (req, res) => {
   try {
     await Notification.updateMany(
@@ -37,7 +33,6 @@ exports.markAllRead = async (req, res) => {
   }
 };
 
-// PUT /api/notifications/:id/read — mark one as read
 exports.markRead = async (req, res) => {
   try {
     await Notification.findByIdAndUpdate(req.params.id, { isRead: true });
